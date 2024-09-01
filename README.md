@@ -1,6 +1,6 @@
 # UNLOCK ME
 
-![UNLOCK ME Icon](assets/images/icondark.png)
+![UNLOCK ME Icon](assets/images/logodark.png)
 
 ## Project Overview
 
