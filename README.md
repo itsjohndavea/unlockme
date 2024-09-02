@@ -32,9 +32,3 @@
 - **Firebase Account**: Create a Firebase project in the [Firebase Console](https://console.firebase.google.com/).
 - **ESP32 Board**: Set up your ESP32 device to communicate with the Flutter app.
 
-### Front-end Setup
-
-1. **Clone the Repository**:
-   ```bash
-   git clone https://github.com/yourusername/unlock-me.git
-   cd unlock-me
