@@ -100,17 +100,6 @@ class FirebaseService {
     }
   }
 
-  // New method to fetch the list of users
-  // Stream<List<User>> getUsers() {
-  //   return _firestore.collection('users').snapshots().map((snapshot) {
-  //     return snapshot.docs.map((doc) {
-  //       return User(
-  //         id: doc.id,
-  //         email: doc['email'] ?? 'No Name', // Use a non-sensitive field
-  //       );
-  //     }).toList();
-  //   });
-  // }
   Stream<List<UserModel>> getUsers() {
     final currentUserUid = FirebaseAuth.instance.currentUser?.uid;
 
