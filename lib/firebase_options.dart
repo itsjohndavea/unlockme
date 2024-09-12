@@ -53,10 +53,10 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCVbUe_juNeMsEsYWV8D-Vh_JNhm48rXe8',
-    appId: '1:242748476436:android:14e87d05979453adbeeb01',
-    messagingSenderId: '242748476436',
-    projectId: 'unlockme-3a8ac',
-    storageBucket: 'unlockme-3a8ac.appspot.com',
+    apiKey: 'SAMPLEAPIKEY',
+    appId: 'SAMPLEID',
+    messagingSenderId: 'SAMPLEMESSAGE',
+    projectId: 'SAMPLEPROJECT',
+    storageBucket: 'SAMPLESTORAGE',
   );
 }
