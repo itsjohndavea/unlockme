@@ -3,6 +3,7 @@ import 'package:bloc/bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:unlockme/app/core/model/usermodel.dart';
 
 enum AuthState { signedIn, signedOut, admin }
@@ -16,16 +17,32 @@ class AuthCubit extends Cubit<AuthState> {
   AuthCubit(this._auth, this._firestore)
       : super(_auth.currentUser != null
             ? AuthState.signedIn
-            : AuthState.signedOut);
+            : AuthState.signedOut) {
+    _checkPersistedAuthState(); // Check authentication state from persistence
+  }
 
+  // Check auth state from SharedPreferences on initialization
+  Future<void> _checkPersistedAuthState() async {
+    final prefs = await SharedPreferences.getInstance();
+    final isSignedIn = prefs.getBool('isSignedIn') ?? false;
+    final isAdmin = prefs.getBool('isAdmin') ?? false;
+
+    if (isAdmin) {
+      emit(AuthState.admin);
+    } else if (isSignedIn) {
+      emit(AuthState.signedIn);
+    } else {
+      emit(AuthState.signedOut);
+    }
+  }
+
+  // Sign in method with persistence
   Future<void> signInWithEmailPassword(String email, String password) async {
     try {
-      // Validate email format
       if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email)) {
         throw 'Invalid email format';
       }
 
-      // Query Firestore for the user document
       QuerySnapshot userQuery = await _firestore
           .collection('users')
           .where('email', isEqualTo: email)
@@ -35,7 +52,6 @@ class AuthCubit extends Cubit<AuthState> {
         throw 'User not found';
       }
 
-      // Assuming there's only one document per username
       DocumentSnapshot userDoc = userQuery.docs.first;
       String storedPassword = userDoc['password'];
 
@@ -44,9 +60,11 @@ class AuthCubit extends Cubit<AuthState> {
       }
 
       if (email == _adminUser && password == _adminPass) {
-        emit(AuthState.admin); // Emit admin state for specific credentials
+        _persistAuthState(isSignedIn: true, isAdmin: true);
+        emit(AuthState.admin);
       } else {
-        emit(AuthState.signedIn); // Emit signed in state for other users
+        _persistAuthState(isSignedIn: true, isAdmin: false);
+        emit(AuthState.signedIn);
       }
     } on SocketException {
       throw 'No internet connection. Please turn on data or Wi-Fi to access the internet.';
@@ -55,10 +73,12 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  // Sign out method with persistence clearing
   Future<void> signOut() async {
     try {
       await _auth.signOut();
-      emit(AuthState.signedOut); // Emit signed out state
+      _clearAuthState();
+      emit(AuthState.signedOut);
     } on SocketException {
       throw 'No internet connection. Please turn on data or Wi-Fi to access the internet.';
     } catch (e) {
@@ -66,10 +86,24 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  // Persist authentication state in SharedPreferences
+  Future<void> _persistAuthState(
+      {required bool isSignedIn, required bool isAdmin}) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isSignedIn', isSignedIn);
+    await prefs.setBool('isAdmin', isAdmin);
+  }
+
+  // Clear authentication state from SharedPreferences
+  Future<void> _clearAuthState() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('isSignedIn');
+    await prefs.remove('isAdmin');
+  }
+
   Future<void> createUserWithEmailPassword(
       String email, String password) async {
     try {
-      // Validate email format
       if (email.isEmpty) {
         throw 'Please enter a value for the email.';
       }
@@ -77,7 +111,6 @@ class AuthCubit extends Cubit<AuthState> {
         throw 'Please enter a valid email address.';
       }
 
-      // Check if the user already exists in Firestore
       DocumentSnapshot userDoc =
           await _firestore.collection('users').doc(email).get();
 
@@ -90,10 +123,7 @@ class AuthCubit extends Cubit<AuthState> {
       }
 
       if (password.length <= 5) {
-        throw 'Please provide atleast 5 length above characters.';
-      }
-      if (email.isEmpty && password.isEmpty) {
-        throw 'Please enter a value for both email and password.';
+        throw 'Please provide at least 6 characters.';
       }
 
       await _firestore.collection('users').doc(email).set({
@@ -109,21 +139,20 @@ class AuthCubit extends Cubit<AuthState> {
 
   Future<void> updateUserRecord(UserModel user) async {
     try {
-      // Ensure the user object has a valid ID
       if (user.id == null || user.id!.isEmpty) {
         throw 'Invalid user ID.';
       }
 
       if (user.email.isEmpty) {
-        throw 'Please enter a email.';
+        throw 'Please enter an email.';
       }
       if (user.password.isEmpty) {
         throw 'Please enter a password.';
       }
       if (user.password.length <= 5) {
-        throw 'Please provide atleast 5 length above characters.';
+        throw 'Please provide at least 6 characters.';
       }
-      // Update the user record in Firestore
+
       await _firestore.collection('users').doc(user.id).update(user.toJson());
     } on SocketException {
       throw 'No internet connection. Please turn on data or Wi-Fi to access the internet.';
