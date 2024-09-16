@@ -15,9 +15,11 @@ class LockCubit extends Cubit<PadLockState> {
   final String _title = dotenv.get('FIREBASE_TITLE');
   final String _body = dotenv.get('FIREBASE_BODY');
   final String _notifyTime = dotenv.get('FIREBASE_TIMESTAMP');
+
   LockCubit(this._notificationService)
       : super(const PadLockState(isLocked: true)) {
     _initPadLock();
+    _listenToPadLockChanges();
   }
 
   Future<void> _initPadLock() async {
@@ -29,18 +31,52 @@ class LockCubit extends Cubit<PadLockState> {
     emit(PadLockState(isLocked: isLocked, lastUpdated: lastUpdated));
   }
 
+  void _listenToPadLockChanges() {
+    _firestore
+        .collection(_collection)
+        .doc(_document)
+        .snapshots()
+        .listen((snapshot) async {
+      final data = snapshot.data();
+      final isLocked = data?[_fieldLock] ?? true;
+      final lastUpdated = data?[_timeUpdate] as Timestamp?;
+
+      // Emit the new state
+      emit(PadLockState(isLocked: isLocked, lastUpdated: lastUpdated));
+
+      // Trigger local notification based on lock state change
+      _notificationService.showNotification(
+        title: "Security Status",
+        body: isLocked
+            ? "Device Security status is: LOCKED"
+            : "Device Security status is: UNLOCKED",
+      );
+
+      // Add notification entry to Firestore 'notifications' collection
+      await _firestore.collection(_notification).add({
+        _title: "Security Status", // Notification title
+        _body: isLocked
+            ? "Device Security status is: LOCKED" // Notification body
+            : "Device Security status is: UNLOCKED",
+        _notifyTime: FieldValue.serverTimestamp(), // Firestore server timestamp
+        _fieldLock:
+            isLocked, // Store the lock state in the notification document
+      });
+    });
+  }
+
   Future<void> toggleLockState() async {
     final newLockState = !state.isLocked;
-    final now = Timestamp.now(); // Get the current timestamp
+    final now = Timestamp.now();
 
     await _firestore.collection(_collection).doc(_document).update({
       _fieldLock: newLockState,
-      _timeUpdate: now, // Update the timestamp in Firestore
+      _timeUpdate: now,
     });
 
     emit(PadLockState(isLocked: newLockState, lastUpdated: now));
 
-    // Send a notification with the lock state
+    // Send a notification when the lock state is toggled
     _notificationService.showNotification(
       title: "Security Status",
       body: newLockState
@@ -48,14 +84,13 @@ class LockCubit extends Cubit<PadLockState> {
           : "Device Security status is: UNLOCKED",
     );
 
-    // Save the lock/unlock state as a notification in Firestore
     await _firestore.collection(_notification).add({
       _title: "Security Status",
       _body: newLockState
           ? "Device Security status is: LOCKED"
           : "Device Security status is: UNLOCKED",
       _notifyTime: FieldValue.serverTimestamp(),
-      _fieldLock: newLockState, // Include the lock state in the notification
+      _fieldLock: newLockState,
     });
   }
 }

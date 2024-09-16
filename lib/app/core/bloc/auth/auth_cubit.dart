@@ -102,7 +102,7 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<void> createUserWithEmailPassword(
-      String email, String password) async {
+      String email, String password, String mobileNumber) async {
     try {
       if (email.isEmpty) {
         throw 'Please enter a value for the email.';
@@ -126,14 +126,21 @@ class AuthCubit extends Cubit<AuthState> {
         throw 'Please provide at least 6 characters.';
       }
 
+      // Format the mobile number
+      String formattedMobileNumber = mobileNumber.trim();
+      if (formattedMobileNumber.startsWith('0')) {
+        formattedMobileNumber = '+63${formattedMobileNumber.substring(1)}';
+      }
+
       await _firestore.collection('users').doc(email).set({
         'email': email,
         'password': password, // In a real app, hash passwords
+        'mobileNumber': formattedMobileNumber,
       });
     } on SocketException {
       throw 'No internet connection. Please turn on data or Wi-Fi to access the internet.';
     } catch (e) {
-      throw '$e';
+      throw 'An error occurred: $e';
     }
   }
 
