@@ -18,6 +18,7 @@ class UpdateUser extends StatefulWidget {
 class _UpdateUserState extends State<UpdateUser> {
   late TextEditingController _emailController;
   late TextEditingController _passwordController;
+  late TextEditingController _mobileController;
   bool _isLoading = false;
 
   @override
@@ -25,6 +26,15 @@ class _UpdateUserState extends State<UpdateUser> {
     super.initState();
     _emailController = TextEditingController(text: widget.user.email);
     _passwordController = TextEditingController(text: widget.user.password);
+    _mobileController =
+        TextEditingController(text: formatMobileNumber(widget.user.mobileNo));
+  }
+
+  String formatMobileNumber(String mobileNo) {
+    if (mobileNo.startsWith('+63')) {
+      return '0${mobileNo.substring(3)}';
+    }
+    return mobileNo;
   }
 
   @override
@@ -81,6 +91,22 @@ class _UpdateUserState extends State<UpdateUser> {
                 controller: _passwordController,
                 isEnable: true, // Enable new password field
               ),
+              const SizedBox(height: 8.0),
+              Text(
+                "Mobile Number",
+                style: TextStyle(
+                    fontSize: 15.0,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white
+                        : const Color(0xFF1b1b1b)),
+              ),
+              const SizedBox(height: 8.0),
+              MyAdminTextfield(
+                hintText: "",
+                isPassword: false,
+                controller: _mobileController,
+                isEnable: true,
+              ),
               const SizedBox(height: 40.0),
               if (_isLoading)
                 const Center(child: CircularProgressIndicator())
@@ -114,18 +140,21 @@ class _UpdateUserState extends State<UpdateUser> {
       // Get the new email and password
       final newEmail = _emailController.text.trim();
       final newPassword = _passwordController.text.trim();
+      String newMobileNo = _mobileController.text.trim();
+      if (newMobileNo.startsWith('0')) {
+        newMobileNo = '+63${newMobileNo.substring(1)}';
+      }
 
       //validate if the password the same no record updated
 
       final updatedUser = UserModel(
-        id: widget.user.id,
-        email: newEmail,
-        password: newPassword,
-      );
+          id: widget.user.id,
+          email: newEmail,
+          password: newPassword,
+          mobileNo: newMobileNo);
 
       // Update the user record in Firestore
       await authCubit.updateUserRecord(updatedUser);
-
       // Show success dialog
       showSuccessDialog();
     } catch (e) {
