@@ -16,6 +16,7 @@ class AddUser extends StatefulWidget {
 class _AddUserState extends State<AddUser> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _mobileController = TextEditingController();
   bool _isLoading = false;
 
   @override
@@ -91,6 +92,22 @@ class _AddUserState extends State<AddUser> {
                 controller: _passwordController,
                 isEnable: true,
               ),
+              const SizedBox(height: 20.0),
+              Text(
+                "Mobile Number",
+                style: TextStyle(
+                    fontSize: 15.0,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white
+                        : const Color(0xFF1b1b1b)),
+              ),
+              const SizedBox(height: 8.0),
+              MyAdminTextfield(
+                hintText: "",
+                isPassword: false,
+                controller: _mobileController,
+                isEnable: true,
+              ),
               const SizedBox(height: 40.0),
               if (_isLoading)
                 const Center(child: CircularProgressIndicator())
@@ -131,15 +148,25 @@ class _AddUserState extends State<AddUser> {
 
     try {
       final authCubit = BlocProvider.of<AuthCubit>(context);
+
+      // Process the mobile number
+      String formattedMobileNumber = _mobileController.text.trim();
+      if (formattedMobileNumber.startsWith('0')) {
+        formattedMobileNumber = '+63${formattedMobileNumber.substring(1)}';
+      }
+
       // Call Cloud Function to create user here
       await authCubit.createUserWithEmailPassword(
         _emailController.text,
         _passwordController.text,
+        formattedMobileNumber, // pass the formatted number
       );
+
       // Notify the admin
       showSuccessDialog();
       _emailController.clear();
       _passwordController.clear();
+      _mobileController.clear();
     } catch (e) {
       showErrorDialog(e.toString());
     } finally {
