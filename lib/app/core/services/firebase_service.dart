@@ -87,7 +87,7 @@ class FirebaseService {
 
   Future<void> deleteOldNotifications() async {
     // Define the cutoff time (3 days ago)
-    final cutoffTime = DateTime.now().subtract(const Duration(days: 3)).toUtc();
+    final cutoffTime = DateTime.now().subtract(const Duration(days: 2)).toUtc();
 
     // Query for notifications older than the cutoff time
     final query = _firestore
