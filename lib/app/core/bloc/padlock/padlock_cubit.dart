@@ -75,22 +75,5 @@ class LockCubit extends Cubit<PadLockState> {
     });
 
     emit(PadLockState(isLocked: newLockState, lastUpdated: now));
-
-    // Send a notification when the lock state is toggled
-    _notificationService.showNotification(
-      title: "Security Status",
-      body: newLockState
-          ? "Device Security status is: LOCKED"
-          : "Device Security status is: UNLOCKED",
-    );
-
-    await _firestore.collection(_notification).add({
-      _title: "Security Status",
-      _body: newLockState
-          ? "Device Security status is: LOCKED"
-          : "Device Security status is: UNLOCKED",
-      _notifyTime: FieldValue.serverTimestamp(),
-      _fieldLock: newLockState,
-    });
   }
 }

@@ -23,7 +23,7 @@ class BatteryCubit extends Cubit<BatteryState> {
   void _initBatteryListener() {
     _firestore
         .collection(_collection)
-        .doc(_document) // Adjust if needed
+        .doc(_document) 
         .snapshots()
         .listen((snapshot) {
       final data = snapshot.data();
