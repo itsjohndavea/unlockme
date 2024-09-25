@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:percent_indicator/circular_percent_indicator.dart';
-import 'package:unlockme/app/core/bloc/battery/battery_cubit.dart';
-import 'package:unlockme/app/core/bloc/battery/battery_state.dart';
+// import 'package:flutter_bloc/flutter_bloc.dart';
+// import 'package:percent_indicator/circular_percent_indicator.dart';
+// import 'package:unlockme/app/core/bloc/battery/battery_cubit.dart';
+// import 'package:unlockme/app/core/bloc/battery/battery_state.dart';
 import 'package:unlockme/app/core/services/firebase_service.dart';
 import 'package:unlockme/app/ui/components/my_drawer.dart';
 import 'package:unlockme/app/ui/screens/notifications.dart';
@@ -76,39 +76,63 @@ class Home extends StatelessWidget {
         ],
       ),
       drawer: const MyDrawer(),
-      body: BlocBuilder<BatteryCubit, BatteryState>(
-        builder: (context, state) {
-          final batteryPercent = state.batteryStatus;
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Welcome to UNLOCK ME.',
+              style: TextStyle(
+                  fontSize: 25,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary),
+            ),
+            const SizedBox(
+              height: 50,
+            ),
+            Image.asset(
+              isDarkMode
+                  ? 'assets/images/logodark.png'
+                  : 'assets/images/logolight.png',
+              width: 80.0,
+              height: 80.0,
+            ),
+          ],
+        ),
+        // body: BlocBuilder<BatteryCubit, BatteryState>(
+        //   builder: (context, state) {
+        //     final batteryPercent = state.batteryStatus;
 
-          return Column(
-            children: [
-              const SizedBox(height: 50),
-              Center(
-                child: CircularPercentIndicator(
-                  radius: 120.0,
-                  lineWidth: 30.0,
-                  animation: true,
-                  percent: batteryPercent / 100,
-                  center: Text(
-                    "${batteryPercent.toStringAsFixed(0)}%",
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 30.0,
-                    ),
-                  ),
-                  circularStrokeCap: CircularStrokeCap.round,
-                  progressColor: Theme.of(context).colorScheme.inversePrimary,
-                ),
-              ),
-              const SizedBox(height: 20.0),
-              const Text(
-                "Battery Status",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17.0),
-              ),
-              const SizedBox(height: 20.0),
-            ],
-          );
-        },
+        //     return Column(
+        //       children: [
+        //         const SizedBox(height: 50),
+        //         Center(
+        //           child: CircularPercentIndicator(
+        //             radius: 120.0,
+        //             lineWidth: 30.0,
+        //             animation: true,
+        //             percent: batteryPercent / 100,
+        //             center: Text(
+        //               "${batteryPercent.toStringAsFixed(0)}%",
+        //               style: const TextStyle(
+        //                 fontWeight: FontWeight.bold,
+        //                 fontSize: 30.0,
+        //               ),
+        //             ),
+        //             circularStrokeCap: CircularStrokeCap.round,
+        //             progressColor: Theme.of(context).colorScheme.inversePrimary,
+        //           ),
+        //         ),
+        //         const SizedBox(height: 20.0),
+        //         const Text(
+        //           "Battery Status",
+        //           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17.0),
+        //         ),
+        //         const SizedBox(height: 20.0),
+        //       ],
+        //     );
+        //   },
+        // ),
       ),
     );
   }
