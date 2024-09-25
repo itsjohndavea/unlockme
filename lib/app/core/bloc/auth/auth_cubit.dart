@@ -6,7 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:unlockme/app/core/model/usermodel.dart';
 
-enum AuthState { signedIn, signedOut, admin }
+enum AuthState { initial, signedIn, signedOut, admin }
 
 class AuthCubit extends Cubit<AuthState> {
   final FirebaseAuth _auth;
@@ -14,10 +14,7 @@ class AuthCubit extends Cubit<AuthState> {
   final String _adminUser = dotenv.get('FIREBASE_ADMIN_USERNAME');
   final String _adminPass = dotenv.get('FIREBASE_PASSWORD');
 
-  AuthCubit(this._auth, this._firestore)
-      : super(_auth.currentUser != null
-            ? AuthState.signedIn
-            : AuthState.signedOut) {
+  AuthCubit(this._auth, this._firestore) : super(AuthState.initial) {
     _checkPersistedAuthState(); // Check authentication state from persistence
   }
 
@@ -36,7 +33,6 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  // Sign in method with persistence
   Future<void> signInWithEmailPassword(String email, String password) async {
     try {
       if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email)) {
@@ -73,7 +69,6 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  // Sign out method with persistence clearing
   Future<void> signOut() async {
     try {
       await _auth.signOut();
@@ -86,7 +81,6 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  // Persist authentication state in SharedPreferences
   Future<void> _persistAuthState(
       {required bool isSignedIn, required bool isAdmin}) async {
     final prefs = await SharedPreferences.getInstance();
@@ -94,13 +88,13 @@ class AuthCubit extends Cubit<AuthState> {
     await prefs.setBool('isAdmin', isAdmin);
   }
 
-  // Clear authentication state from SharedPreferences
   Future<void> _clearAuthState() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('isSignedIn');
     await prefs.remove('isAdmin');
   }
 
+  // Validation added: Check if email already exists when creating a new user
   Future<void> createUserWithEmailPassword(
       String email, String password, String mobileNumber) async {
     try {
@@ -111,10 +105,13 @@ class AuthCubit extends Cubit<AuthState> {
         throw 'Please enter a valid email address.';
       }
 
-      DocumentSnapshot userDoc =
-          await _firestore.collection('users').doc(email).get();
+      // Check if email already exists
+      QuerySnapshot userQuery = await _firestore
+          .collection('users')
+          .where('email', isEqualTo: email)
+          .get();
 
-      if (userDoc.exists) {
+      if (userQuery.docs.isNotEmpty) {
         throw 'Email is already in use.';
       }
 
@@ -144,6 +141,7 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  // Validation added: Prevent updating to an existing email in Firestore
   Future<void> updateUserRecord(UserModel user) async {
     try {
       if (user.id == null || user.id!.isEmpty) {
@@ -158,6 +156,16 @@ class AuthCubit extends Cubit<AuthState> {
       }
       if (user.password.length <= 5) {
         throw 'Please provide at least 6 characters.';
+      }
+
+      // Check if the email belongs to another user
+      QuerySnapshot userQuery = await _firestore
+          .collection('users')
+          .where('email', isEqualTo: user.email)
+          .get();
+
+      if (userQuery.docs.isNotEmpty && userQuery.docs.first.id != user.id) {
+        throw 'Email is already in use by another user.';
       }
 
       await _firestore.collection('users').doc(user.id).update(user.toJson());
