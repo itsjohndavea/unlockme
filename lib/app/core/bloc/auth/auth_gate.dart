@@ -4,27 +4,51 @@ import 'package:unlockme/app/core/bloc/auth/auth_cubit.dart';
 import 'package:unlockme/app/ui/admin/admin.dart';
 import 'package:unlockme/app/ui/screens/home.dart';
 import 'package:unlockme/app/ui/screens/login.dart';
+import 'package:unlockme/app/ui/screens/splashscreen.dart';
 
-class AuthGate extends StatelessWidget {
+class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
 
   @override
+  AuthGateState createState() => AuthGateState();
+}
+
+class AuthGateState extends State<AuthGate> {
+  bool _isSplashVisible = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _startSplashScreenTimer();
+  }
+
+  void _startSplashScreenTimer() async {
+    // Add a delay of 2 seconds to show the SplashScreen
+    await Future.delayed(const Duration(seconds: 2));
+    setState(() {
+      _isSplashVisible = false;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: BlocBuilder<AuthCubit, AuthState>(
-        builder: (context, state) {
-          switch (state) {
-            case AuthState.admin:
-              return const Admin(); // Your admin interface screen
-            case AuthState.signedIn:
-              return const Home(); // Regular user home screen
-            case AuthState.signedOut:
-              return const Login(); // Login screen
-            default:
-              return const Center(child: CircularProgressIndicator());
-          }
-        },
-      ),
-    );
+    return _isSplashVisible
+        ? const SplashScreen() // Show SplashScreen initially
+        : BlocBuilder<AuthCubit, AuthState>(
+            builder: (context, state) {
+              switch (state) {
+                case AuthState.initial:
+                  return const SplashScreen(); // Still show the SplashScreen if it's in the initial state
+                case AuthState.admin:
+                  return const Admin();
+                case AuthState.signedIn:
+                  return const Home();
+                case AuthState.signedOut:
+                  return const Login();
+                default:
+                  return const SplashScreen();
+              }
+            },
+          );
   }
 }
