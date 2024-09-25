@@ -12,6 +12,7 @@ import 'package:unlockme/app/core/services/notif_service.dart';
 import 'package:unlockme/app/ui/admin/admin.dart';
 import 'package:unlockme/app/ui/screens/home.dart';
 import 'package:unlockme/app/ui/screens/login.dart';
+import 'package:unlockme/app/ui/screens/splashscreen.dart';
 import 'package:unlockme/app/ui/theme/theme.dart';
 import 'package:unlockme/firebase_options.dart';
 import 'package:unlockme/app/core/bloc/auth/auth_cubit.dart';
@@ -69,6 +70,7 @@ class MyApp extends StatelessWidget {
               '/home': (context) => const Home(),
               '/login': (context) => const Login(),
               '/admin': (context) => const Admin(),
+              '/splashscreen': (context) => const SplashScreen(),
               // other routes
             },
             home: const AuthGate(),
