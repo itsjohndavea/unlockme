@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:logger/logger.dart';
 import 'package:unlockme/app/core/services/notif_service.dart';
 import 'package:unlockme/app/core/bloc/padlock/padlock_state.dart';
 
